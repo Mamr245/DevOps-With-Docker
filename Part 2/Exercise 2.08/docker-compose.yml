@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13.2-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: exercise
+    container_name: db_backend
+    volumes:
+      - ./database:/var/lib/postgresql/data
+  frontend:   
+    build: 
+      context: ./example-frontend
+    container_name: frontend
+  backend:
+    build: 
+      context: ./example-backend
+    container_name: backend
+    environment:
+      REDIS_HOST: redis
+      POSTGRES_HOST: db
+      POSTGRES_PASSWORD: exercise
+    depends_on:
+      - db
+  redis:
+    image: redis
+    restart: unless-stopped
+  proxy:
+    image: jwilder/nginx-proxy
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./nginx.config:/etc/nginx/nginx.conf
+    ports:
+      - 80:80
+    
+volumes:
+  database:
